@@ -13,7 +13,15 @@ var CONTACT_TEMPLATE = { name: "", email: "", description: "", errors: null }
 
 
 // The app's complete current state
-var state = {};
+// Set initial data
+var state = {
+    contacts: [
+        { key: 1, name: "James K Nelson", email: "james@jamesknelson.com", description: "Front-end Unicorn" },
+        { key: 2, name: "Jim", email: "jim@example.com" },
+    ],
+    newContact: Object.assign({}, CONTACT_TEMPLATE),
+    location: window.location.hash
+};
 
 // Make the given changes to the state and perform any required housekeeping
 function setState(changes) {
@@ -21,24 +29,40 @@ function setState(changes) {
 
     var component;
 
-    switch (state.location) {
-        case "#/contacts":
-            {
-                component = React.createElement(ContactsView, Object.assign({}, state, {
-                    onNewContactChange: updateNewContact,
-                    onNewContactSubmit: submitNewContact,
-                }));
-            }
-            break;
-        default:
-            {
+    var actions = state.location.replace(/^#\/|\/$/g, "").split("/");
+
+    if (!actions || actions.length === 0) {
+        component = React.createElement("div", {},
+            React.createElement("h1", {}, "Not Found"),
+            React.createElement("a", { href: "#/contacts" }, "See Contacts")
+        );
+    } else {
+        switch (actions[0]) {
+            case "contacts":
+                if (actions[1]) {
+                    component = React.createElement(ContactView, {
+                        contacts: state.contacts,
+                        id: actions[1]
+                    });
+                } else {
+                    component = React.createElement(ContactsView, Object.assign({}, state, {
+                        onNewContactChange: updateNewContact,
+                        onNewContactSubmit: submitNewContact,
+                    }));
+                }
+
+                break;
+
+            default:
                 component = React.createElement("div", {},
                     React.createElement("h1", {}, "Not Found"),
-                    React.createElement("a", { herf: "#/contacts" }, "contacts list")
+                    React.createElement("a", { href: "#/contacts" }, "See Contacts")
                 );
-            }
-            break;
+
+                break;
+        }
     }
+
     ReactDOM.render(component, document.getElementById('react-app'));
 
 }
@@ -50,15 +74,6 @@ function navigated() {
 window.addEventListener("hashchange", navigated, false);
 
 document.addEventListener("load", function() {
-    // Set initial data
-    Object.assign(state, {
-        contacts: [
-            { key: 1, name: "James K Nelson", email: "james@jamesknelson.com", description: "Front-end Unicorn" },
-            { key: 2, name: "Jim", email: "jim@example.com" },
-        ],
-        newContact: Object.assign({}, CONTACT_TEMPLATE),
-        location: window.location.hash
-    });
 
     navigated();
 });
